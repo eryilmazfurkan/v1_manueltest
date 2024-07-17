@@ -1,0 +1,14 @@
+sqlite_db_path: "xxxx"
+mongodb:
+  uri: "xxxxxx"
+  database_name: "xxxx"
+settings:
+  operator_prefix: "operator"
+  desk_prefix: "desk"
+  device_prefix: "xx"
+  tbm_indicator: "TPM_PT_FAMILY_INDICATOR:"
+  modem_vid_pid: "xxxxxx"
+  firmware_keyword: "xxxxxx"
+  check_usb:
+    - xxxxx
+    - xxxxx
