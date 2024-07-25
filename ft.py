@@ -46,7 +46,7 @@ result_dict = {
     "result_usb": False
 }
 
-with open("config.yaml", "r") as file:
+with open("/home/pi/c40_functionaltest/config.yaml", "r") as file:
     config = yaml.safe_load(file)
 
 operator_prefix = config['settings']['operator_prefix']
@@ -61,7 +61,6 @@ usb_list = config['settings']['check_usb']
 def operator_qr():
     while True:
         operator = input("Operator QR okutunuz: ")
-        operator = "operator_furkan_eryilmaz"
         if operator.startswith(operator_prefix):
             return operator
         else:
@@ -70,23 +69,30 @@ def operator_qr():
 def desk_qr():
     while True:
         desk = input("Masa QR okutunuz: ")
-        desk = "desk"
         if desk.startswith(desk_prefix):
             return desk
         else:
             print("Geçerisiz QR girdiniz. Lütfen MASA QR giriniz:")
 
-def pcb_qr():
+def pcb_qr_on():
     while True:
-        pcb = input("Device QR okutunuz: ")
-        pcb = "xx"
+        pcb = input("Device QR ön tarafı okutunuz: ")
         #TODO: device qr kontrolünü değiştir
         if pcb.startswith(device_prefix):
             return pcb
         else:
             #TODO: Uyarı yazısı ekle
-            print("Uyarı")
+            print("Geçerisiz QR girdiniz. Lütfen tekrar QR giriniz:")
 
+def pcb_qr_arka():
+    while True:
+        pcb = input("Device QR arka tarafı okutunuz: ")
+        #TODO: device qr kontrolünü değiştir
+        if pcb.startswith(device_prefix):
+            return pcb
+        else:
+            #TODO: Uyarı yazısı ekle
+            print("Geçerisiz QR girdiniz. Lütfen tekrar QR giriniz:")
 
 def i2c_device_detected(address, i2c_bus='1'):
     try:
@@ -297,11 +303,9 @@ def check_usb():
 def main():
     try:
         result_operator = operator_qr()
-        print(result_operator)
         result_desk = desk_qr()
-        print(result_desk)
-        result_pcb = pcb_qr()
-        print(result_pcb)
+        result_pcb_on = pcb_qr_on()
+        result_pcb_arka = pcb_qr_arka()
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
         print(f"{back_black}{fore_yellow}Ledlerin yanıp yanmadığını kontrol ediniz{reset}")
@@ -337,13 +341,13 @@ def main():
             print("TEST BAŞARILI")
             result_dict["test_result"] = "PASS"
             print(result_dict["test_result"])
-            logger.info(f"Results: {result_operator}, {result_desk}, {result_pcb}, {result_dict['test_result']}, {result_dict['result_led']}, {result_dict['result_usrbtn']}, "
+            logger.info(f"Results: {result_operator}, {result_desk}, {result_pcb_on}, {result_pcb_arka}, {result_dict['test_result']}, {result_dict['result_led']}, {result_dict['result_usrbtn']}, "
             f"{result_dict['result_rstbtn']}, {result_dict['result_rtc']}, {result_dict['result_tbm']}, "
             f"{result_dict['result_tmpsnsr']}, {result_dict['result_uspc']}, {result_dict['result_cr']}, {result_dict['result_adc']}, "
             f"{result_dict['result_cellular']}, {result_dict['result_iccid']}, {result_dict['result_imei']}, {result_dict['result_firmware']}, "
             f"{result_dict['result_eth0']}, {result_dict['result_eth1']}, {result_dict['result_usb']}")
-            cursor.execute('''INSERT INTO tablo (operator, desk, pcb, test_result, led, usrbtn, rstbtn, rtc, tbm, tmpsnsr, uspc, cr, adc, cellular, iccid, imei, firmware, eth0, eth1, usb)
-                          VALUES (?,?,?,?,
+            cursor.execute('''INSERT INTO tablo (operator, desk, pcb, pcb_arka, test_result, led, usrbtn, rstbtn, rtc, tbm, tmpsnsr, uspc, cr, adc, cellular, iccid, imei, firmware, eth0, eth1, usb)
+                          VALUES (?,?,?,?,?,
                                 CASE WHEN ? THEN 'True' ELSE 'False' END,
                                 CASE WHEN ? THEN 'True' ELSE 'False' END,
                                 CASE WHEN ? THEN 'True' ELSE 'False' END,
@@ -358,7 +362,7 @@ def main():
                                 CASE WHEN ? THEN 'True' ELSE 'False' END,
                                 CASE WHEN ? THEN 'True' ELSE 'False' END,
                                 CASE WHEN ? THEN 'True' ELSE 'False' END)''', 
-                       (result_operator, result_desk, result_pcb, result_dict["test_result"], result_dict["result_led"], 
+                       (result_operator, result_desk, result_pcb_on, result_pcb_arka, result_dict["test_result"], result_dict["result_led"], 
                         result_dict["result_usrbtn"], result_dict["result_rstbtn"], result_dict["result_rtc"], 
                         result_dict["result_tbm"], result_dict["result_tmpsnsr"], result_dict["result_uspc"], 
                         result_dict["result_cr"], result_dict["result_adc"], result_dict["result_cellular"], 
@@ -381,33 +385,33 @@ def main():
             if failed_test_keys:
                 result_dict["test_result"] = "FAIL"
                 print(result_dict["test_result"])
-                logger.info(f"Results: {result_operator}, {result_desk}, {result_pcb}, {result_dict['test_result']}, {result_dict['result_led']}, {result_dict['result_usrbtn']}, "
+                logger.info(f"Results: {result_operator}, {result_desk}, {result_pcb_on}, {result_pcb_arka}, {result_dict['test_result']}, {result_dict['result_led']}, {result_dict['result_usrbtn']}, "
                 f"{result_dict['result_rstbtn']}, {result_dict['result_rtc']}, {result_dict['result_tbm']}, "
                 f"{result_dict['result_tmpsnsr']}, {result_dict['result_uspc']}, {result_dict['result_cr']}, {result_dict['result_adc']}, "
                 f"{result_dict['result_cellular']}, {result_dict['result_iccid']}, {result_dict['result_imei']}, {result_dict['result_firmware']}, "
                 f"{result_dict['result_eth0']}, {result_dict['result_eth1']}, {result_dict['result_usb']}")
-                cursor.execute('''INSERT INTO tablo (operator, desk, pcb, test_result, led, usrbtn, rstbtn, rtc, tbm, tmpsnsr, uspc, cr, adc, cellular, iccid, imei, firmware, eth0, eth1, usb)
-                            VALUES (?,?,?,?,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    ?,?,?,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END,
-                                    CASE WHEN ? THEN 'True' ELSE 'False' END)''', 
-                        (result_operator, result_desk, result_pcb, result_dict["test_result"], result_dict["result_led"], 
-                            result_dict["result_usrbtn"], result_dict["result_rstbtn"], result_dict["result_rtc"], 
-                            result_dict["result_tbm"], result_dict["result_tmpsnsr"], result_dict["result_uspc"], 
-                            result_dict["result_cr"], result_dict["result_adc"], result_dict["result_cellular"], 
-                            result_dict["result_iccid"], result_dict["result_imei"], result_dict["result_firmware"], 
-                            result_dict["result_eth0"], result_dict["result_eth1"], result_dict["result_usb"]))
+                cursor.execute('''INSERT INTO tablo (operator, desk, pcb, pcb_arka, test_result, led, usrbtn, rstbtn, rtc, tbm, tmpsnsr, uspc, cr, adc, cellular, iccid, imei, firmware, eth0, eth1, usb)
+                            VALUES (?,?,?,?,?,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                ?,?,?,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END,
+                                CASE WHEN ? THEN 'True' ELSE 'False' END)''', 
+                        (result_operator, result_desk, result_pcb_on, result_pcb_arka, result_dict["test_result"], result_dict["result_led"], 
+                        result_dict["result_usrbtn"], result_dict["result_rstbtn"], result_dict["result_rtc"], 
+                        result_dict["result_tbm"], result_dict["result_tmpsnsr"], result_dict["result_uspc"], 
+                        result_dict["result_cr"], result_dict["result_adc"], result_dict["result_cellular"], 
+                        result_dict["result_iccid"], result_dict["result_imei"], result_dict["result_firmware"], 
+                        result_dict["result_eth0"], result_dict["result_eth1"], result_dict["result_usb"]))
                 connection.commit()
                 print("TEST BAŞARISIZ")
                 for key in failed_test_keys:

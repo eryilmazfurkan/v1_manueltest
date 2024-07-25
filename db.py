@@ -9,6 +9,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS tablo (
                     operator TEXT NOT NULL, 
                     desk TEXT NOT NULL,
                     pcb TEXT NOT NULL,
+                    pcb_arka TEXT NOT NULL,
                     led BOOLEAN NOT NULL,
                     usrbtn BOOLEAN NOT NULL,
                     rstbtn BOOLEAN NOT NULL,
